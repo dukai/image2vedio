@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>探索-Yeelink</title>
+<link type="text/css" rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="yeefoto">
+	<div class="video"><img id="i" width="320" height="240" /></div>
+	<div class="bar">
+		<div class="btn play">
+			<span></span>
+		</div>
+		<div class="progressbar">
+			
+			<div class="loadingbar"></div>
+			<div class="playbar"></div>
+			<div class="playtrigger"></div>
+			
+		</div>
+	</div>
+</div>
+
+<div id="show"></div>
+
+<div id="img-cate">
+	<img id="i" />
+</div>
+<script src="jquery-1.9.1.min.js"></script>
+<script src="img.js"></script>
+<script>
+var mix = function(base, child){
+	var o = new Object();
+	for(var key in base){
+		o[key] = base[key];
+	}
+	for(var key in child){
+		o[key] = child[key];
+	}
+	return o;
+};
+
+var YeeFoto = function(options){
+	this._initYeeFoto(options);
+};
+
+YeeFoto.prototype = {
+	_initYeeFoto: function(options){
+		this.options = {
+			container: '',
+			//最大连接数
+			maxcon: 5,
+			interval: 100
+			
+		};
+		this.options = mix(this.options, options);
+		
+		this.total = -1;
+		this.loaded = 0;
+		this.current = -1;
+		this.maxcon = 0;
+		this.loadPercent = 0;
+		this.playPercent = 0;
+		this.panel = $(this.options.container);
+		this.loadbar = this.panel.find('.loadingbar');
+		this.playbtn = this.panel.find('.btn');
+		this.playbar = this.panel.find('.playbar');
+		this.trigger = this.panel.find('.playtrigger');
+		
+		this.manulPause = false;
+		
+		this.loadFirst = true;
+		
+		//images URI string array
+		this.images = [];
+		//Image Object Queue
+		this.imagesQueue = [];
+		
+		this.image = this.panel.find('#i')[0];
+		this.loadImages();
+		
+		this.initEvents();
+	},
+	
+	initEvents: function(){
+		var self = this;
+		this.playbtn.click(function(e){
+			if($(this).hasClass('play')){
+				self.manulPause = true;
+				self.pause();
+			}else if($(this).hasClass('stop')){
+				self.current = 0;
+				self.play();
+			}else if($(this).hasClass('pause')){
+				self.play();
+			}
+		});
+	},
+	//载入图片
+	loadImages: function(){
+		this.getImages(this.loading);
+	},
+	//获取图片数组
+	getImages: function(fn){
+		//TODO: get images queue by ajax
+		//TODO:正在请求媒体资源
+		this.images = images;
+		this.total = images.length;
+		this.current = 0;
+		fn.call(this);
+	},
+	
+	//停止
+	stop: function(){
+		if(this.timer){
+			clearInterval(this.timer);
+			this.timer = null;
+			this.playbtn.attr('class', 'btn stop');
+		}
+	},
+	//开始播放
+	play: function(){
+		var self = this;
+		if(!this.timer){
+			self.playbtn.attr('class', 'btn play');
+			this.timer = setInterval(function(){
+				if(self.current == self.total){
+					self.stop();
+					return;
+				}
+				
+				if(self.current == self.loaded){
+					self.pause();
+					return;
+				}
+				
+				var percent = Math.round( self.current / self.total * 10000) / 100 + "%";
+				self.playbar.css('width', percent);
+				self.trigger.css('left', percent);
+				self.image.src = self.imagesQueue[self.current++].src;
+			}, 100);
+		}
+	},
+	//暂停播放
+	pause: function(){
+		if(this.timer){
+			clearInterval(this.timer);
+			this.timer = null;
+			this.playbtn.attr('class', 'btn pause');
+		}
+	},
+	//载入图片数据
+	loading: function(){
+		var self = this;
+		if(this.options.maxcon > 5 || this.images.length == 0){
+			return;
+		}
+		
+		var img = new Image();
+		self.imagesQueue.push(img);
+		img.onload = function(){
+			if(self.loadFirst){
+				self.image.src = this.src;
+				self.loadFirst = false;
+			}
+			self.loadProgress();
+		};
+		
+		img.onerror = function(){
+			self.loadProgress();
+		}
+		
+		img.src = images.shift();
+		this.maxcon++;
+	},
+	
+	loadProgress: function(){
+		var self = this;
+		self.loaded++;
+		self.maxcon--;
+		self.loadPercent = self.loaded / self.total;
+		percent = Math.round(self.loadPercent * 100) + '%';
+		self.panel.find('.loadingbar').css('width', percent);
+		if(this.loaded - this.current > (5000 / this.options.interval) && self.manulPause == false){
+			this.play();
+		}
+		if(self.loaded == self.total){
+			self.loadComplete();
+			return;
+		}
+		
+		self.loading();
+	},
+	
+	loadComplete: function(){
+		
+	}
+	
+};
+
+new YeeFoto({
+	'container': '.yeefoto'
+});
+
+//return;
+/*
+var total = images.length;
+var current = images.length;
+var $loading = $('.loadingbar');
+var $playbar = $('.playbar');
+var $trigger = $('.playtrigger');
+var show = document.getElementById('show');
+var maxcon = 0;
+var imgQueue = [];
+
+function loadImage(){
+	if(maxcon > 5 || images.length == 0){
+		return;
+	}
+	var img = new Image();
+	imgQueue.push(img);
+	img.onload = function(){
+		total--;
+		maxcon--;
+		show.innerHTML = total + ' / ' + current;
+		var percent = Math.round((current - total) / current * 100) + '%';
+		$loading.css('width', percent);
+		loadImage();
+		if(total <= 0){
+			complete();
+		}
+	};
+	img.src = images.shift();
+	maxcon++;
+}
+
+loadImage();
+var si = document.getElementById('i');
+function complete(){
+	console.log('complete');
+	//si.src = imgQueue[0].src;
+	var i = 0;
+	var timer = setInterval(function(){
+		if(i > current){
+			clearInterval(timer);
+		}
+		var percent = Math.round(i / current * 10000) / 100 + '%';
+		$playbar.css('width', percent);
+		$trigger.css('left', percent);
+		si.src = imgQueue[i++].src;
+	}, 100);
+}
+*/
+</script>
+</body>
+</html>
