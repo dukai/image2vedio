@@ -25,6 +25,8 @@
 			
 		</div>
 	</div>
+	
+	<div class="loading">正在获取信息...</div>
 </div>
 
 <div id="show"></div>
@@ -114,10 +116,27 @@ YeeFoto.prototype = {
 	getImages: function(fn){
 		//TODO: get images queue by ajax
 		//TODO:正在请求媒体资源
-		this.images = images;
-		this.total = images.length;
-		this.current = 0;
-		fn.call(this);
+		var self = this;
+		self.showLoading();
+		setTimeout(function(){
+			self.images = images;
+			self.total = images.length;
+			self.current = 0;
+			fn.call(self);
+			self.hideLoading();
+		}, 2000);
+	},
+	
+	showLoading: function(info){
+		
+		if(info != ''){
+			this.panel.find('.loading').html(info);
+		}
+		this.panel.find('.loading').fadeIn();
+	},
+	
+	hideLoading: function(){
+		this.panel.find('.loading').fadeOut();
 	},
 	
 	//停止
