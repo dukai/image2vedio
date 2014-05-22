@@ -1,4 +1,5 @@
-var images = ["http://www.yeelink.net/files/data/sensor/photo/10753/s1393362062.jpg",
+var images = [
+"http://www.yeelink.net/files/data/sensor/photo/10753/s1393362062.jpg",
 "http://www.yeelink.net/files/data/sensor/photo/10753/s1393362188.jpg",
 "http://www.yeelink.net/files/data/sensor/photo/10753/s1393362313.jpg",
 "http://www.yeelink.net/files/data/sensor/photo/10753/s1393362438.jpg",

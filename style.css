@@ -91,7 +91,7 @@ a:hover {
 }
 .yeefoto .bar {
   width: 290px;
-  height: 27px;
+  height: 36px;
   background: #d4d4d4;
   background: -webkit-gradient(linear, 0 0, 0 100%, from(#e9e9e9), to(#c0c0c0));
   position: absolute;
@@ -104,7 +104,7 @@ a:hover {
   width: 10px;
   height: 10px;
   position: absolute;
-  top: 9px;
+  top: 20px;
   left: 10px;
   cursor: pointer;
 }
@@ -134,15 +134,21 @@ a:hover {
   display: block;
   background: #000;
 }
+.yeefoto .bar .time {
+  position: absolute;
+  right: 10px;
+  top: 15px;
+  font-size: 10px;
+  color: #666;
+}
 .yeefoto .bar .progressbar {
-  width: 245px;
   height: 5px;
   background: #ccc;
   border-radius: 3px;
   box-shadow: 0 1px 1px #bbb inset, 0 1px 1px #fff;
-  position: absolute;
-  left: 30px;
-  top: 11px;
+  position: relative;
+  top: 8px;
+  margin: 0 10px;
 }
 .yeefoto .bar .progressbar .loadingbar {
   height: 5px;

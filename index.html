@@ -13,6 +13,10 @@
 		<div class="btn play">
 			<span></span>
 		</div>
+		
+		<div class="time">
+			2014-1-4 23:32:21
+		</div>
 		<div class="progressbar">
 			
 			<div class="loadingbar"></div>
@@ -31,15 +35,19 @@
 <script src="jquery-1.9.1.min.js"></script>
 <script src="img.js"></script>
 <script>
-var mix = function(base, child){
-	var o = new Object();
-	for(var key in base){
-		o[key] = base[key];
-	}
-	for(var key in child){
-		o[key] = child[key];
-	}
-	return o;
+var mix = function(base, child, deep){
+    var o = new Object();
+    for(var key in base){
+        o[key] = base[key];
+    }
+    for(var key in child){
+		if(deep && isPlainObject(o[key])){
+			o[key] = mix(o[key], child[key]);
+		}else{
+			o[key] = child[key];
+		}
+    }
+    return o;
 };
 
 var YeeFoto = function(options){
