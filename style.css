@@ -85,7 +85,7 @@ a:hover {
   position: relative;
 }
 .yeefoto .video {
-  background: #00d2ff;
+  background: #007ad5;
   width: 320px;
   height: 240px;
 }
@@ -187,7 +187,7 @@ a:hover {
 .yeefoto .loading {
   width: 120px;
   height: 40px;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.5);
   border-radius: 5px;
   position: absolute;
   top: 40%;
@@ -197,5 +197,51 @@ a:hover {
   color: #fff;
   font-size: 12px;
   line-height: 40px;
-  text-align: center;
+  text-align: left;
+}
+.yeefoto .loading .loader {
+  font-size: 2px;
+  position: absolute;
+  left: 4px;
+  top: 6px;
+}
+.yeefoto .loading .title {
+  text-indent: 3em;
+}
+.loader {
+  font-size: 2px;
+  position: relative;
+  text-indent: -9999em;
+  border-top: 1.5em solid rgba(255, 255, 255, 0.2);
+  border-right: 1.5em solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1.5em solid rgba(255, 255, 255, 0.2);
+  border-left: 1.5em solid #ffffff;
+  -webkit-animation: load8 1.1s infinite linear;
+  animation: load8 1.1s infinite linear;
+}
+.loader,
+.loader:after {
+  border-radius: 50%;
+  width: 10em;
+  height: 10em;
+}
+@-webkit-keyframes load8 {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@keyframes load8 {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
 }

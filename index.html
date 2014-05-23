@@ -26,7 +26,10 @@
 		</div>
 	</div>
 	
-	<div class="loading">正在获取信息...</div>
+	<div class="loading">
+		<div class="loader"></div>
+		<div class="title"></div>
+	</div>
 </div>
 
 <div id="show"></div>
@@ -62,8 +65,8 @@ YeeFoto.prototype = {
 			container: '',
 			//最大连接数
 			maxcon: 5,
-			interval: 100
-			
+			interval: 100,
+			sensorId: -1
 		};
 		this.options = mix(this.options, options);
 		
@@ -78,7 +81,8 @@ YeeFoto.prototype = {
 		this.playbtn = this.panel.find('.btn');
 		this.playbar = this.panel.find('.playbar');
 		this.trigger = this.panel.find('.playtrigger');
-		
+		this.stoped = false;
+		this.paused = false;
 		this.manulPause = false;
 		
 		this.loadFirst = true;
@@ -89,6 +93,7 @@ YeeFoto.prototype = {
 		this.imagesQueue = [];
 		
 		this.image = this.panel.find('#i')[0];
+		this.datetime = this.panel.find('.time')[0];
 		this.loadImages();
 		
 		this.initEvents();
@@ -98,13 +103,13 @@ YeeFoto.prototype = {
 		var self = this;
 		this.playbtn.click(function(e){
 			if($(this).hasClass('play')){
-				self.manulPause = true;
-				self.pause();
-			}else if($(this).hasClass('stop')){
-				self.current = 0;
+				if(self.stoped){
+					self.current = 0;
+				}
 				self.play();
 			}else if($(this).hasClass('pause')){
-				self.play();
+				self.manulPause = true;
+				self.pause();
 			}
 		});
 	},
@@ -117,20 +122,37 @@ YeeFoto.prototype = {
 		//TODO: get images queue by ajax
 		//TODO:正在请求媒体资源
 		var self = this;
-		self.showLoading();
-		setTimeout(function(){
-			self.images = images;
-			self.total = images.length;
+		self.showLoading('请求媒体资源');
+		
+		this.ajaxGetImagesInfo(1, function(){
+			self.total = self.images.length;
 			self.current = 0;
 			fn.call(self);
-			self.hideLoading();
-		}, 2000);
+			self.showLoading('加载资源中');
+		});
+	},
+	
+	ajaxGetImagesInfo: function(page, callback){
+		var self = this;
+		$.ajax({
+			url: 'http://developer.yeelink.net/en_US/sensor-data/photo-history?sensor_id=' + this.options.sensorId + '&page=' + page,
+			type: 'get',
+			dataType: 'json',
+			success: function(result){
+				if(result.length != 0){
+					self.images = self.images.concat(result);
+					self.ajaxGetImagesInfo(page + 1, callback);
+				}else{
+					callback();
+				}
+			}
+		});
 	},
 	
 	showLoading: function(info){
 		
 		if(info != ''){
-			this.panel.find('.loading').html(info);
+			this.panel.find('.loading .title').html(info);
 		}
 		this.panel.find('.loading').fadeIn();
 	},
@@ -144,14 +166,15 @@ YeeFoto.prototype = {
 		if(this.timer){
 			clearInterval(this.timer);
 			this.timer = null;
-			this.playbtn.attr('class', 'btn stop');
+			this.playbtn.attr('class', 'btn play');
+			this.stoped = true;
 		}
 	},
 	//开始播放
 	play: function(){
 		var self = this;
 		if(!this.timer){
-			self.playbtn.attr('class', 'btn play');
+			self.playbtn.attr('class', 'btn pause');
 			this.timer = setInterval(function(){
 				if(self.current == self.total){
 					self.stop();
@@ -159,14 +182,20 @@ YeeFoto.prototype = {
 				}
 				
 				if(self.current == self.loaded){
+					self.showLoading('有点卡，加载中');
 					self.pause();
 					return;
 				}
-				
+				self.hideLoading();
 				var percent = Math.round( self.current / self.total * 10000) / 100 + "%";
 				self.playbar.css('width', percent);
 				self.trigger.css('left', percent);
-				self.image.src = self.imagesQueue[self.current++].src;
+				var imageObj = self.imagesQueue[self.current++];
+				if(imageObj.img.loaderror){
+					return;
+				}
+				self.image.src = imageObj.img.src;
+				self.datetime.innerHTML = imageObj.datetime;
 			}, 100);
 		}
 	},
@@ -175,7 +204,7 @@ YeeFoto.prototype = {
 		if(this.timer){
 			clearInterval(this.timer);
 			this.timer = null;
-			this.playbtn.attr('class', 'btn pause');
+			this.playbtn.attr('class', 'btn play');
 		}
 	},
 	//载入图片数据
@@ -184,9 +213,15 @@ YeeFoto.prototype = {
 		if(this.options.maxcon > 5 || this.images.length == 0){
 			return;
 		}
-		
+		var imageInfo = this.images.shift();
 		var img = new Image();
-		self.imagesQueue.push(img);
+		
+		var imageObj = {
+			img: img,
+			datetime: imageInfo.timestamp
+		};
+		
+		self.imagesQueue.push(imageObj);
 		img.onload = function(){
 			if(self.loadFirst){
 				self.image.src = this.src;
@@ -196,13 +231,14 @@ YeeFoto.prototype = {
 		};
 		
 		img.onerror = function(){
+			this.loaderror = true;
 			self.loadProgress();
 		}
 		
-		img.src = images.shift();
+		img.src = imageInfo.value.url + '!qvga';
 		this.maxcon++;
 	},
-	
+	//加载过程
 	loadProgress: function(){
 		var self = this;
 		self.loaded++;
@@ -220,15 +256,18 @@ YeeFoto.prototype = {
 		
 		self.loading();
 	},
-	
+	//加载完成
 	loadComplete: function(){
-		
+		if(!this.stoped){
+			this.play();
+		}
 	}
 	
 };
 
 new YeeFoto({
-	'container': '.yeefoto'
+	'container': '.yeefoto',
+	'sensorId': 14095
 });
 
 //return;
